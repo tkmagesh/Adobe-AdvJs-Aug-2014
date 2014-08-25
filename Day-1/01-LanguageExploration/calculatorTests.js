@@ -12,7 +12,7 @@ function runTests(){
 		//Assert
 		return actualResult === expectedResult;
 	});
-
+/*
 	test("Should be able to add two numbers in string format", function(){
 		//Arrange
 		var number1 = "10",
@@ -162,6 +162,6 @@ function runTests(){
 		//Assert
 		return actualResult === expectedResult;
 	});
-
+*/
 
 }
