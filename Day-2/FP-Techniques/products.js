@@ -77,3 +77,116 @@ var productComparerByValueDesc = inverseComparer(productComparerByValue);
 sort(products,productComparerByValueDesc);
 console.table(products);
 
+var filter = function(list, criteriaFn){
+	var result = [];
+	for(var i=0;i<list.length;i++)
+		if (criteriaFn(list[i]) === true)
+			result.push(list[i])
+	return result;
+}
+
+var costlyProductCriteria = function(p){ return p.cost > 50; }
+var allCostlyProducts = filter(products,costlyProductCriteria);
+console.log("All costly products [cost > 50]");
+console.table(allCostlyProducts);
+
+//min
+var min= function(list, selector){
+	var selectorFn = selector;
+	if (typeof selectorFn === "string")
+		selectorFn = function(item){ return item[selector]};
+	var result = selectorFn(list[0]);
+	for(var i=1;i<list.length;i++){
+		var value = selectorFn(list[i]);
+		if (value < result) result = value;
+	}
+	return result;
+}
+console.log("Min cost = " ,min(products,"cost"));
+console.log("Min product value = ", min(products, function(p){
+	return p.cost * p.units;
+}));
+
+//max
+//avg
+//sum
+
+//groupBy
+var groupBy = function(list, selector){
+	var selectorFn = selector;
+	if (typeof selectorFn === "string")
+		selectorFn = function(item){ return item[selector]};
+	var result = {};
+	for(var i=0;i<list.length;i++){
+		var key = selectorFn(list[i]);
+		/*if (typeof result[key] === "undefined")
+			result[key] = [];*/
+		result[key] = result[key] || [];
+		result[key].push(list[i]);
+	}
+	return result;
+}
+
+var every = function(list, predicate){
+	for(var i=0;i<list.length;i++)
+		if (!predicate(list[i]))
+			return false;
+	return true;
+}
+
+var some = function(list, predicate){
+	for(var i=0;i<list.length;i++)
+		if (predicate(list[i]))
+			return true;
+	return false;
+}
+
+var forEach = function(list, fn){
+	for(var i=0;i<list.length;i++)
+		fn(list[i]);
+}
+
+var categories = [
+	{id : 1, name : "stationary"},
+	{id : 2, name : "grocery"}
+]
+
+var join = function(leftList, rightList, leftKeyName, rightKeyName, combinerFn){
+	var result = [];
+	for(var i=0;i<leftList.length;i++){
+		var leftItem = leftList[i],
+			leftKey = leftItem[leftKeyName];
+		for(var j=0;j<rightList.length;j++){
+			var rightItem = rightList[j],
+				rightKey = rightItem[rightKeyName];
+			if (leftKey === rightKey){
+				var resultItem = combinerFn(leftItem, rightItem);
+				result.push(resultItem);
+			}
+		}
+	}
+	return result;
+}
+
+console.log("Using join...");
+var productsWithCategoryName = join(products,categories,"category","id", function(p,c){
+  return { id : p.id, name : p.name, cost : p.cost, units : p.units, category : c.name };
+});
+console.table(productsWithCategoryName);
+
+
+var map = function(list,fn){
+	var result = [];
+	for(var i=0;i<list.length;i++)
+		result.push(fn(list[i]));
+	return result;
+}
+console.table("Using map to transform the products..");
+var newProductsWithDiscount = map(products,function(p){
+	return {
+		id : p.id,
+		category : p.category,
+		cost : p.category === 1 ? p.cost * 0.9 : p.cost
+	};
+});
+console.table(newProductsWithDiscount);
