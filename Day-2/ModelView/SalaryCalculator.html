@@ -41,7 +41,6 @@
 		triggerChange = (function(attrName){
 			var subscriptions = _subscribers[attrName] || [];
 			for(var i=0;i<subscriptions.length;i++){
-				console.log("inside triggerChange ", this);
 				subscriptions[i].call(this);
 			}
 		}).bind(this);
@@ -56,18 +55,10 @@
 		
 	};
 
-	(function(){
-		window.addEventListener("DOMContentLoaded",init);
-		window.calculator = new SalaryCalculator();
-		function init(){
-			
-			document.getElementById("btnCalculate").addEventListener("click",onBtnCalculateClick);
-			document.getElementById("rangeTax").addEventListener("change",onRangeTaxChange);
-			document.getElementById("txtBasic").addEventListener("change",onTxtBasicChange);
-			document.getElementById("txtHra").addEventListener("change",onTxtHraChange);
-			document.getElementById("txtDa").addEventListener("change",onTxtDaChange);
-			document.getElementById("rangeTax").addEventListener("change",onRangeTaxChange);
-		}
+
+	function SalaryCalculatorView(calculator){
+		this.root = document.createElement("div");
+
 		function onTxtBasicChange(){
 			calculator.set('basic',parseInt(this.value,10));
 		}
@@ -86,28 +77,59 @@
 			
 		}
 
-		calculator.addSubscriber('salary',function(){
-			document.getElementById("divResult").innerHTML = calculator.get('salary');
-		});
-		calculator.addSubscriber('basic',function(){
-			console.log(this);
-			document.getElementById("txtBasic").value = this.get('basic');
-		})
-		calculator.addSubscriber('hra',function(){
-			document.getElementById("txtHra").value = calculator.get('hra');
-		})
-		calculator.addSubscriber('da',function(){
-			document.getElementById("txtDa").value = calculator.get('da');
-		})
-		calculator.addSubscriber('tax',function(){
-			document.getElementById("rangeTax").value = calculator.get('tax');
-			document.getElementById("spanTax").innerHTML = calculator.get('tax') + "%";
-		});
-	})()
+		this.initialize = function(){
+			//UI Changes
+
+			this.root.addEventListener("click",function(){
+				onBtnCalculateClick.apply(document.getElementById("btnCalculate"), arguments);
+			});
+			this.root.addEventListener("change",function(evtArg){
+				if (evtArg.srcElement.id === "rangeTax"){
+					onRangeTaxChange.apply(evtArg.srcElement, arguments);
+				}
+				if (evtArg.srcElement.id === "txtBasic"){
+					onTxtBasicChange.apply(evtArg.srcElement, arguments);
+				}
+				if (evtArg.srcElement.id === "txtHra"){
+					onTxtHraChange.apply(evtArg.srcElement, arguments);
+				}
+				if (evtArg.srcElement.id === "txtDa"){
+					onTxtDaChange.apply(evtArg.srcElement, arguments);
+				}
+			});
+			
+			//Model changes
+			var that = this;
+			calculator.addSubscriber('salary',function(){
+				that.root.querySelector('#divResult').innerHTML = calculator.get('salary');
+			});
+			calculator.addSubscriber('basic',function(){
+				that.root.querySelector("#txtBasic").value = this.get('basic');
+			})
+			calculator.addSubscriber('hra',function(){
+				that.root.querySelector("#txtHra").value = calculator.get('hra');
+			})
+			calculator.addSubscriber('da',function(){
+				that.root.querySelector("#txtDa").value = calculator.get('da');
+			})
+			calculator.addSubscriber('tax',function(){
+				that.root.querySelector("#rangeTax").value = calculator.get('tax');
+				that.root.querySelector("#spanTax").innerHTML = calculator.get('tax') + "%";
+			});
+		};
+
+		this.render = function(){
+			this.root.innerHTML = document.getElementById("salaryCalculatorTemplate").innerHTML;
+			this.root.querySelector("#txtBasic").value = calculator.get('basic');
+			this.root.querySelector("#txtHra").value = calculator.get('hra');
+			this.root.querySelector("#txtDa").value = calculator.get('da');
+			this.root.querySelector("#rangeTax").value = calculator.get('tax');
+			return this;
+		}
+
+	}
 	</script>
-</head>
-<body>
-	<h1>Salary Calculator</h1>
+	<script id="salaryCalculatorTemplate" type="text/template">
 	<hr>
 	<div><label for="txtBasic">Basic :</label><input type="text" name="" id="txtBasic"></div>
 	<div><label for="txtHra">HRA :</label><input type="text" name="" id="txtHra"></div>
@@ -121,5 +143,10 @@
 	<div>
 		<div id="divResult">[Salary]</div>
 	</div>
+	</script>
+</head>
+<body>
+	<h1>Salary Calculator</h1>
+	
 </body>
 </html>
