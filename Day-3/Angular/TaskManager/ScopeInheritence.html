@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Scope Inheritence</title>
+	<style type="text/css">
+		div{
+			padding : 20px;
+			border-width: 2px;
+			border-style: solid;
+			margin : 10px;
+		}
+		.parent{
+			border-color: blue;
+			background-color: lightblue;
+		}
+		.child{
+			border-color: red;
+			background-color: lightpink;
+		}
+
+	</style>
+	<script src="angular.js"></script>
+	<script>
+	function parentController($scope){
+		$scope.data = {
+			name : "Magesh"
+		};
+	}
+	function childController($scope){
+
+	}
+	</script>
+</head>
+<body ng-app>
+	<div class="parent" data-ng-controller="parentController">
+		name : <input type="text" ng-model="data.name">
+		<div class="child" data-ng-controller="childController">
+			name : <input type="text" ng-model="data.name">
+		</div>
+	</div>
+</body>
+</html>

@@ -36,8 +36,10 @@ var server = http.createServer(function(req,res){
 		}
 	} else {
 		if (urlPath === '/tasks'){
-			res.write(JSON.stringify(tasks));
-			res.end();
+			setTimeout(function(){
+				res.write(JSON.stringify(tasks));
+				res.end();
+			}, 1000);
 		}
 	}
 });

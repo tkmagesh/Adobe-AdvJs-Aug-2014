@@ -13,11 +13,20 @@
 		cursor: pointer;
 	}
 	</style>
+	<script type="text/javascript" src="jquery-2.1.1.js"></script>
 	<script src="angular.js"></script>
 	<script>
-		var tApp = angular.module('taskApp', []);
+	angular.module('utils',[])
+		.filter('trimString', [function(){
+			return function(data, size){
+				data = data || '';
+				size = size || 10;
+				return data.length > size ? data.substr(0,size) + "..." : data;
+			}
+		}]);
 
-		tApp.factory('Task', function(){
+	angular.module('taskApp', ['utils'])
+		.factory('Task', [function(){
 			function Task(defaults){
 				defaults = defaults || {}; 
 				this.id = defaults.id || -1;
@@ -28,28 +37,53 @@
 				this.isCompleted = !this.isCompleted;
 			};
 			return Task;	
-		});
-		tApp.controller('taskController', function taskController($scope, $http, Task){
+		}])
 
-			var tasks = $scope.tasks = [];
-			$http.get('/tasks').then(function(res){
-				tasks = $scope.tasks = res.data.map(function(d){
-					return new Task(d);
+		.service('taskService', ['$http','Task','$q', function($http, Task, $q){
+			this.getAll = function(){
+				var defered = $q.defer();
+				$http.get('/tasks').then(function(res){
+					var result = res.data.map(function(d){
+						return new Task(d);
+					});
+					defered.resolve(result);
+				});	
+				return defered.promise;
+			}
+		}])
+		.directive('notify', function(){
+			return function($scope, $element, attributes){
+				//$element.hide();
+				$scope.$watch('message', function(newValue, oldValue){
+					$element.html(newValue).fadeIn(400).delay(5000).fadeOut(500);
 				});
-			});
+				
+			}
+		})
+		.controller('taskController', ['$scope','taskService','Task', function taskController($scope, taskService, Task){
 
-			$scope.addNew = function(taskName){
-				var newTask = new Task({name : taskName})
-				tasks.push(newTask);
-			};
-			
-			$scope.removeCompleted = function(){
-				for(var i=tasks.length-1;i>=0;i--){
-					if (tasks[i].isCompleted)
-						tasks.splice(i,1);
+			$scope.tasks = {
+				list : [],
+				addNew : function(taskName){
+					var newTask = new Task({name : taskName})
+					this.list.push(newTask);
+					$scope.message = "A new task is added.."	
+				},
+				removeCompleted : function(){
+					for(var i=this.list.length-1;i>=0;i--){
+						if (this.list[i].isCompleted)
+							this.list.splice(i,1);
+					}
+					$scope.message = "Zero or more completed tasks are removed...";
 				}
 			}
-		});
+			
+			taskService.getAll().then(function(result){
+				$scope.tasks.list = result;
+			});
+
+			
+		}]);
 
 	</script>
 </head>
@@ -57,18 +91,27 @@
 	<h1>Task Manager</h1>
 	<hr>
 	<div data-ng-controller="taskController">
+		<div>
+			<span>Search :</span>
+			<input type="text" data-ng-model="searchTask.name">
+		</div>
+		<div>
+			<span>Task Name Lengt :</span>
+			<input type="range" min="10" max="50" data-ng-model="taskSize">
+		</div>
 		<label for="txtTask">Task :</label>
 		<input type="text" name="" id="txtTask" data-ng-model="newTask">
-		<input type="button" value="Add Task" id="btnAdd" data-ng-click="addNew(newTask)">
-		<input type="button" value="Remove Completed" id="btnRemoveCompleted" data-ng-click="removeCompleted()">
+		<input type="button" value="Add Task" id="btnAdd" data-ng-click="tasks.addNew(newTask)">
+		<input type="button" value="Remove Completed" id="btnRemoveCompleted" data-ng-click="tasks.removeCompleted()">
 		<ul id="ulTaskList">
 			<li 
-			data-ng-repeat="task in tasks" 
+			data-ng-repeat="task in tasks.list | filter:searchTask" 
 			data-ng-click="task.toggleCompletion()"
 			data-ng-class="{completed : task.isCompleted}"
-			>{{task.name}}</li>
+			>{{task.name | trimString:taskSize}}</li>
 		</ul>
 		<div>Total Task # : {{tasks.length}}</div>
+		<div notify>{{message}}</div>
 	</div>
 </body>
 </html>
