@@ -18,20 +18,28 @@
 		var tApp = angular.module('taskApp', []);
 
 		tApp.factory('Task', function(){
-			function Task(name,isCompleted){
-				this.name = name || "";
-				this.isCompleted = isCompleted || false;
+			function Task(defaults){
+				defaults = defaults || {}; 
+				this.id = defaults.id || -1;
+				this.name = defaults.name || "";
+				this.isCompleted = defaults.isCompleted || false;
 			};
 			Task.prototype.toggleCompletion = function(){
 				this.isCompleted = !this.isCompleted;
 			};
 			return Task;	
 		});
-		tApp.controller('taskController', function taskController($scope, Task){
+		tApp.controller('taskController', function taskController($scope, $http, Task){
 
 			var tasks = $scope.tasks = [];
+			$http.get('/tasks').then(function(res){
+				tasks = $scope.tasks = res.data.map(function(d){
+					return new Task(d);
+				});
+			});
+
 			$scope.addNew = function(taskName){
-				var newTask = new Task(taskName)
+				var newTask = new Task({name : taskName})
 				tasks.push(newTask);
 			};
 			
