@@ -38,7 +38,7 @@
 		this.removeSubscriber = function(attrName,subscriberFn){
 			//fill in the blanks
 		};
-		triggerChange = (function(attrName){
+		var triggerChange = (function(attrName){
 			var subscriptions = _subscribers[attrName] || [];
 			for(var i=0;i<subscriptions.length;i++){
 				subscriptions[i].call(this);
@@ -80,8 +80,10 @@
 		this.initialize = function(){
 			//UI Changes
 
-			this.root.addEventListener("click",function(){
-				onBtnCalculateClick.apply(document.getElementById("btnCalculate"), arguments);
+			this.root.addEventListener("click",function(evtArg){
+				if (evtArg.srcElement.id === "btnCalculate"){
+					onBtnCalculateClick.apply(evtArg.srcElement, arguments);
+				}
 			});
 			this.root.addEventListener("change",function(evtArg){
 				if (evtArg.srcElement.id === "rangeTax"){
