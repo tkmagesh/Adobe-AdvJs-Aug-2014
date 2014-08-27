@@ -15,21 +15,52 @@
 	</style>
 	<script src="angular.js"></script>
 	<script>
+		var tApp = angular.module('taskApp', []);
+
+		tApp.factory('Task', function(){
+			function Task(name,isCompleted){
+				this.name = name || "";
+				this.isCompleted = isCompleted || false;
+			};
+			Task.prototype.toggleCompletion = function(){
+				this.isCompleted = !this.isCompleted;
+			};
+			return Task;	
+		});
+		tApp.controller('taskController', function taskController($scope, Task){
+
+			var tasks = $scope.tasks = [];
+			$scope.addNew = function(taskName){
+				var newTask = new Task(taskName)
+				tasks.push(newTask);
+			};
+			
+			$scope.removeCompleted = function(){
+				for(var i=tasks.length-1;i>=0;i--){
+					if (tasks[i].isCompleted)
+						tasks.splice(i,1);
+				}
+			}
+		});
 
 	</script>
 </head>
-<body>
+<body ng-app="taskApp">
 	<h1>Task Manager</h1>
 	<hr>
-	<div>
+	<div data-ng-controller="taskController">
 		<label for="txtTask">Task :</label>
-		<input type="text" name="" id="txtTask">
-		<input type="button" value="Add Task" id="btnAdd">
-		<input type="button" value="Remove Completed" id="btnRemoveCompleted">
+		<input type="text" name="" id="txtTask" data-ng-model="newTask">
+		<input type="button" value="Add Task" id="btnAdd" data-ng-click="addNew(newTask)">
+		<input type="button" value="Remove Completed" id="btnRemoveCompleted" data-ng-click="removeCompleted()">
 		<ul id="ulTaskList">
-			<li>Task - 1</li>
-			<li class="completed">Task - 2</li>
+			<li 
+			data-ng-repeat="task in tasks" 
+			data-ng-click="task.toggleCompletion()"
+			data-ng-class="{completed : task.isCompleted}"
+			>{{task.name}}</li>
 		</ul>
+		<div>Total Task # : {{tasks.length}}</div>
 	</div>
 </body>
 </html>
